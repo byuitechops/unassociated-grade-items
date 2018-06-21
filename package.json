@@ -1,0 +1,29 @@
+{
+  "name": "child-template",
+  "version": "1.0.0",
+  "description": "Put your child module's description here",
+  "main": "main.js",
+  "dependencies": {
+    "canvas-wrapper": "github:byuitechops/canvas-wrapper"
+  },
+  "devDependencies": {
+    "async": "^2.6.0",
+    "child-development-kit": "github:byuitechops/child-development-kit",
+    "tap": "^10.7.3"
+  },
+  "scripts": {
+    "start": "node ./node_modules/child-development-kit/runChild.js",
+    "test": "tap ./node_modules/child-development-kit/runChild.js -T"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/byuitechops/child-template.git"
+  },
+  "author": "Zachary Williams, Daniel Green",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/byuitechops/child-template/issues"
+  },
+  "homepage": "https://github.com/byuitechops/child-template#readme",
+  "childType": "postImport"
+}
