@@ -1,5 +1,5 @@
 {
-  "name": "child-template",
+  "name": "unassociated-grade-items",
   "version": "1.0.0",
   "description": "Put your child module's description here",
   "main": "main.js",
@@ -17,13 +17,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/byuitechops/child-template.git"
+    "url": "git+https://github.com/byuitechops/unassociated-grade-items.git"
   },
-  "author": "Zachary Williams, Daniel Green",
+  "author": "Aaron Shiffler",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/byuitechops/child-template/issues"
+    "url": "https://github.com/byuitechops/unassociated-grade-items/issues"
   },
-  "homepage": "https://github.com/byuitechops/child-template#readme",
+  "homepage": "https://github.com/byuitechops/unassociated-grade-items#readme",
   "childType": "postImport"
 }
