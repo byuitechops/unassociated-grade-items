@@ -25,5 +25,5 @@
     "url": "https://github.com/byuitechops/unassociated-grade-items/issues"
   },
   "homepage": "https://github.com/byuitechops/unassociated-grade-items#readme",
-  "childType": "postImport"
+  "childType": "preImport"
 }
