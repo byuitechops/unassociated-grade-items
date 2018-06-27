@@ -43,6 +43,12 @@ const phrase = 'grade';
 var fetchSubFiles = function (directory, next) {
     var fileArray = [];
     var directoryArray = [];
+    var subFileArray = [];
+    var subDirectoryArray = [];
+
+    // Consider using asyncLib.series here to handle async order
+
+
     directory.directories.map( (folder) => {
         fs.readdir(targetDirectory + folder, function(err, files){
             if (err){
@@ -50,20 +56,22 @@ var fetchSubFiles = function (directory, next) {
             } else {
                 files.forEach(function(file){
                     if(file.includes('.')) {
-                        fileArray.push(file);
+                        subFileArray.push(folder + '\\' + file);
                     } else {
-                        directoryArray.push(file);
+                        subDirectoryArray.push(folder + '\\'+ file);
                     }
                 });
             }
-            fileArray.forEach(newFile => {directory.files.push(folder + '\\' + newFile)});
-            fileArray = [];
+            subFileArray.forEach(newFile => {directory.files.push(newFile)});
+            subFileArray = [];
+            subDirectoryArray.forEach(newDirectory => {directory.directories.push(newDirectory)});
+            subDirectoryArray = [];
             // directory.files.forEach(thing => {console.log(thing)}) // Make sure files are being recorded correctly
-            console.log(directoryArray);
-            // fetchSubFiles ({files: fileArray, directories: directoryArray}, next);
+            // directory.directories.forEach(thing => {console.log(thing)}) // Make sure directories are being recorded correctly
         });
     });
-
+    // directory.files.forEach(thing => {console.log(thing)}) // Make sure files are being recorded correctly
+    // directory.directories.forEach(thing => {console.log(thing)}) // Make sure directories are being recorded correctly
 }
 
 /********************************************************************
