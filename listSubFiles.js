@@ -1,32 +1,58 @@
+/********************************************************************
+ * listSubFiles.js
+ * returns an array of the paths which lead to every file and sub-file
+ * starting from an initial parent directory. 
+ * 
+ * STATUS: Incomplete
+ * 
+ * NEXT: -> Catch non-existant targetDirectory path locations
+ *       -> Mind the Async when attempting to export the array of files
+ *       -> Properly handle non-fatal errors that would otherwise terminate
+ *          the program.
+ * 
+ * NOTE: This program will terminate if it tries to access a file it 
+ *       does not have permission to.
+ * 
+ * Usage:
+ * const lsf = require('listSubFiles.js');
+ * var array = lsf(target);
+ ********************************************************************/
+
+module.exports = (targetDirectory) => {
 const fs = require('fs');
 const asyncLib = require('async');
 // const targetDirectory = `C:\\Users\\ajshiff\\Documents\\git\\d2l-to-canvas\\unassociated-grade-items\\node_modules\\child-development-kit\\factory\\unzipped\\Conversion Test Gauntlet 1\\`;
-const targetDirectory = process.argv[2];
-const phrase = 'grade';
-//closures
 
 /********************************************************************
  * 
  ********************************************************************/
 function readDirectory(allFiles, directories, getFiles_cb) {
     if (directories.length !== 0) {
-        console.log(directories.length);
+        // console.log(directories.length);
         let newDirectories = [];
         directories.forEach(directory => {
-            let files = fs.readdirSync(directory);
+            var files = fs.readdirSync(directory);
             // console.log(files);
             files.forEach(file => {
-                if(file.includes('.')) {
+                // console.log(file);
+                let fileStat = fs.lstatSync(directory + file);
+                let isDirectory = fileStat.isDirectory();
+                let isFile = fileStat.isFile();
+                if (isDirectory) {
+                    newDirectories.push(directory + file + '\\');
+                } else if (isFile) {
                     allFiles.push(directory + file);
                 } else {
-                    newDirectories.push(directory + file + '\\');
+                    console.log("HEY! LOOK AT THIS!!!: " + directory + file);
+                    // console.log(fileStat);
                 }
             });
             // console.log(newDirectories);
         });
-        console.log(newDirectories)
+        // console.log(newDirectories);
         directories = newDirectories;
-        readDirectory(allFiles, directories, getFiles_cb)
+        readDirectory (allFiles, directories, getFiles_cb)
+        
     } else {
         getFiles_cb(null, allFiles);
     }
@@ -54,8 +80,12 @@ var finalResults_cb = function(err, results){
         console.error(err);
     } else {
         // console.log(results);
+        // console.log(results.length);
         results.forEach(result => {
-            // console.log(result);
+            if (true)
+            {
+                console.log(result);
+            }
         })
     }
 }
@@ -73,3 +103,4 @@ function main (){
  * 
  ********************************************************************/
 main();
+}
