@@ -5,10 +5,10 @@
  * 
  * STATUS: Incomplete
  * 
- * NEXT: -> Catch non-existant targetDirectory path locations
- *       -> Mind the Async when attempting to export the array of files
+ * NEXT: -> Catch user-given non-existant targetDirectory path locations (WIP)
+ *       -> Mind the Async when attempting to export the array of files (DONE)
  *       -> Properly handle non-fatal errors that would otherwise terminate
- *          the program.
+ *          the program. 
  * 
  * NOTE: This program will terminate if it tries to access a file it 
  *       does not have permission to.
@@ -17,41 +17,54 @@
  * const lsf = require('listSubFiles.js');
  * var array = lsf(target);
  ********************************************************************/
-
-module.exports = (targetDirectory) => {
 const fs = require('fs');
+const path = require('path');
 const asyncLib = require('async');
-// const targetDirectory = `C:\\Users\\ajshiff\\Documents\\git\\d2l-to-canvas\\unassociated-grade-items\\node_modules\\child-development-kit\\factory\\unzipped\\Conversion Test Gauntlet 1\\`;
 
 /********************************************************************
  * 
  ********************************************************************/
 function readDirectory(allFiles, directories, getFiles_cb) {
     if (directories.length !== 0) {
-        // console.log(directories.length);
         let newDirectories = [];
         directories.forEach(directory => {
-            var files = fs.readdirSync(directory);
-            // console.log(files);
-            files.forEach(file => {
-                // console.log(file);
-                let fileStat = fs.lstatSync(directory + file);
-                let isDirectory = fileStat.isDirectory();
-                let isFile = fileStat.isFile();
-                if (isDirectory) {
-                    newDirectories.push(directory + file + '\\');
-                } else if (isFile) {
-                    allFiles.push(directory + file);
-                } else {
-                    console.log("HEY! LOOK AT THIS!!!: " + directory + file);
-                    // console.log(fileStat);
-                }
-            });
-            // console.log(newDirectories);
+            try {
+                var files = fs.readdirSync(directory);
+                var dontCheckDirectory = false;
+            } catch(err) {
+                console.log('Hrmmm...'); // No permission to look inside this folder
+                console.log('dontCheckDirectory = true: ' + directory); // doSkipError is related to having no permission to check file details.
+                dontCheckDirectory = true;
+                // process.exit(console.log('Terminating program...'));
+            }
+            if (!dontCheckDirectory) {
+                files.forEach(file => {
+                    try { 
+                        let fileStat = fs.lstatSync(directory + file);
+                        var isDirectory = fileStat.isDirectory();
+                        var isFile = fileStat.isFile();
+                        var doSkipError = false;
+                    } catch (err) {
+                        // console.log('THIS IS WHY WE CAN\'T HAVE NICE THINGS'); // No permissions to check file details
+                        isDirectory = false;
+                        isFile = false;
+                        doSkipError = true;
+                    }
+                    if (isDirectory) {
+                        newDirectories.push(directory + file + '\\');
+                    } else if (isFile) {
+                        allFiles.push(directory + file);
+                    } else if (doSkipError){
+                        // console.log("doSkipError = true: " + directory + file); // doSkipError is related to having no permission to check file details.
+                    } else {
+                        // Enter Code here if you want to do something about
+                        // files found that aren't files or directories
+                    }
+                });
+            }
         });
-        // console.log(newDirectories);
-        directories = newDirectories;
-        readDirectory (allFiles, directories, getFiles_cb)
+        // Run readDirectory() until it's exit condition is met in the if/else at the top.
+        readDirectory(allFiles, newDirectories, getFiles_cb)
         
     } else {
         getFiles_cb(null, allFiles);
@@ -64,43 +77,45 @@ function readDirectory(allFiles, directories, getFiles_cb) {
  * two arrays one for files and one for subdirectories. An object of
  * those arrays is passed to the next function in the waterfall.
  ********************************************************************/
-function getFiles (getFiles_cb){
+function getFiles (targetDirectory, getFiles_cb){
     var fileArray = [];
+    console.log(path.resolve(targetDirectory));
     var directoryArray = [targetDirectory];
     readDirectory(fileArray, directoryArray, getFiles_cb);
 }
 
-
-
 /********************************************************************
  * 
  ********************************************************************/
-var finalResults_cb = function(err, results){
-    if (err) {
-        console.error(err);
+function checkVariables (targetDirectory, checkVars_cb){
+    var isDirectory = false;
+    var error = null;
+    try {
+        if (fs.existsSync(targetDirectory)) {
+            isDirectory = fs.lstatSync(targetDirectory).isDirectory();
+        } 
+    } catch (err){
+        error = "Something went wrong!\n" + err;
+    }
+    if (error){
+        checkVars_cb(error, null);
+    } else if (!isDirectory) {
+        error = "The Path you entered does not lead to a directory.";
+        checkVars_cb(error, null);
     } else {
-        // console.log(results);
-        // console.log(results.length);
-        results.forEach(result => {
-            if (true)
-            {
-                console.log(result);
-            }
-        })
+        // let absolutePath = path.resolve(targetDirectory);
+        // console.log(absolutePath);
+        checkVars_cb(null, null);
     }
 }
 
 /********************************************************************
  * 
  ********************************************************************/
-function main (){
+module.exports = (targetDirectory, stepCallback) => {
     asyncLib.waterfall([
-        getFiles
-    ], finalResults_cb);
-}
-
-/********************************************************************
- * 
- ********************************************************************/
-main();
+        // (checkVars_cb) => checkVariables(targetDirectory, checkVars_cb),
+        (getFiles_cb) => getFiles(targetDirectory, getFiles_cb)
+    ], stepCallback);
+    
 }
