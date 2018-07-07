@@ -1,52 +1,48 @@
 /********************************************************************
  * listSubFiles.js
- * returns an array of the paths which lead to every file and sub-file
- * starting from an initial parent directory. 
- * 
- * STATUS: Incomplete
- * 
- * NEXT: -> Catch user-given non-existant targetDirectory path locations (WIP)
- *       -> Mind the Async when attempting to export the array of files (DONE)
- *       -> Properly handle non-fatal errors that would otherwise terminate
- *          the program. (DONE)
- * 
- * NOTE: 
+ * Sends an array of file paths to the parent function starting from 
+ * an initial directory.
  * 
  * Usage:
- * const lsf = require('listSubFiles.js');
- * var array = lsf(target);
+ * const lsf = require('./listSubFiles.js');
+ * var array;
+ * lsf(targetDirectory, (err, results) => {array = results});
  ********************************************************************/
+// Declare Dependancies
 const fs = require('fs');
 const path = require('path');
 const asyncLib = require('async');
 
 /********************************************************************
- * 
+ * readDirectory() starts in an initial direcotory and sorts files into
+ * two arrays, one for directories and one for documents. Any file encoutered
+ * that doesn't have read permission or doesn't meet those qualifications is
+ * discarded. Documents are sorted into an array and remembered between searches.
+ * The array of directories is reset every loop.
  ********************************************************************/
 function readDirectory(allFiles, directories, getFiles_cb) {
-    if (directories.length !== 0) {
+    if (directories.length !== 0) { // Are there any sub-directories to search through?
         let newDirectories = [];
         directories.forEach(directory => {
             try {
                 var files = fs.readdirSync(directory);
                 var checkDirectory = true;
             } catch(err) {
+                // Something went wrong when trying to read that directory
+                console.log('checkDirectory = false: ' + directory);
                 console.log(err)
-                console.log('Hrmmm...'); // No permission to look inside this folder
-                console.log('checkDirectory = false: ' + directory); // skipDirectoryError is related to having no permission to look inside folder
                 checkDirectory = false;
             }
             if (checkDirectory) {
                 files.forEach(file => {
-                    try { 
+                    try {
                         let fileStat = fs.lstatSync(directory + '\\' + file);
                         var isDirectory = fileStat.isDirectory();
                         var isFile = fileStat.isFile();
                         var doSkipError = false;
                     } catch (err) {
                         // No permissions to check file details
-                        // console.log('THIS IS WHY WE CAN\'T HAVE NICE THINGS'); 
-                        // console.log(err)
+                        console.log(err)
                         isDirectory = false;
                         isFile = false;
                         doSkipError = true;
@@ -73,10 +69,8 @@ function readDirectory(allFiles, directories, getFiles_cb) {
 }
 
 /********************************************************************
- * filesInDirectory() utilizes a publicly defined targetDirectory 
- * then fetches all items in that directory and organizes them into
- * two arrays one for files and one for subdirectories. An object of
- * those arrays is passed to the next function in the waterfall.
+ * getFiles() gives an overhead summary of what is trying to be
+ * accomplished in the this step of the waterfall.
  ********************************************************************/
 function getFiles (absolutePath, getFiles_cb){
     var fileArray = [];
@@ -85,7 +79,11 @@ function getFiles (absolutePath, getFiles_cb){
 }
 
 /********************************************************************
- * 
+ * checkVariables() checks the targetDirectory to make sure it is 
+ * a directory and not something else, and exists. If something goes
+ * wrong, the error is returned which is handled in the parent module
+ * in the stepCallback. If everything goes right, then the absolutePath
+ * to the targetDirectory is passed into the next callback in the waterfall.
  ********************************************************************/
 function checkVariables (targetDirectory, checkVars_cb){
     var isDirectory = false;
@@ -115,12 +113,5 @@ module.exports = (targetDirectory, stepCallback) => {
     asyncLib.waterfall([
         (checkVars_cb) => checkVariables(targetDirectory, checkVars_cb),
         (absolutePath, getFiles_cb) => getFiles(absolutePath, getFiles_cb)
-    ], (err, data) => {
-        if (err){
-            console.log('The program failed.');
-            console.error(err);
-        } else {
-            stepCallback(null, data);
-        }
-    });
+    ], stepCallback);
 }
